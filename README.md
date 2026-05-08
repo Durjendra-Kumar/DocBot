@@ -44,7 +44,7 @@ A full-stack AI chatbot that lets you upload PDF documents and chat with them in
 | Backend | FastAPI + Uvicorn |
 | Database | MongoDB (via PyMongo) |
 | LLM | LLaMA 3.1 8B (via Groq API) |
-| Embeddings | `paraphrase-multilingual-MiniLM-L12-v2` |
+| Embeddings | HuggingFace Inference API (paraphrase-multilingual-MiniLM-L12-v2) |
 | Auth | Argon2 password hashing (passlib) |
 | Frontend | HTML + Bootstrap 5 + Vanilla JS |
 
@@ -86,6 +86,7 @@ Create a `.env` file in the project root:
 ```env
 MONGO_URI=mongodb://localhost:27017
 GROQ_API_KEY=your_groq_api_key_here
+HF_API_KEY=your_huggingface_api_key_here
 ```
 
 - Get your **Groq API key** free at [console.groq.com](https://console.groq.com)

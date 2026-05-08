@@ -123,19 +123,39 @@ def upload(request: Request, file: UploadFile = File(...)):
 # ---------------- CHAT ---------------- #
 
 def stream_response(query, context):
-    system_prompt = """
-    You are a helpful document-based AI assistant.
-    Answer ONLY from the provided context.
-    If the answer is not in the context, say: "Please ask a valid question related to the document."
+    # Detect question language for dynamic prompt
+    hindi_chars = sum(1 for c in query if '\u0900' <= c <= '\u097F')
+    total_chars = len(query.replace(" ", "")) or 1
+    hindi_ratio = hindi_chars / total_chars
 
-    IMPORTANT: Detect the language of the user's question and ALWAYS reply in that SAME language.
-    For example:
-    - If the question is in Hindi, reply in Hindi.
-    - If the question is in English, reply in English.
-    - If the question is in Hinglish (mixed Hindi-English), reply in Hinglish.
+    has_english = any(c.isascii() and c.isalpha() for c in query)
 
-    Keep answers clear and concise.
-    """
+    if hindi_ratio > 0.5:
+        is_hindi = True
+        is_hinglish = False
+    elif hindi_chars > 0 and has_english:
+        is_hindi = False
+        is_hinglish = True
+    else:
+        is_hindi = False
+        is_hinglish = False
+
+    if is_hindi:
+        lang_instruction = "User ne Hindi mein sawaal kiya hai. Apna jawab HINDI mein do. Thodi bahut English use kar sakte ho."
+    elif is_hinglish:
+        lang_instruction = "User ne Hinglish mein sawaal kiya hai (Hindi + English mix). Apna jawab bhi Hinglish mein do — Hindi aur English dono mix karke likho, jaise normal Hinglish boli jaati hai."
+    else:
+        lang_instruction = "The user asked in English. Reply ONLY in English."
+
+    system_prompt = f"""You are a helpful document-based AI assistant.
+Answer ONLY using the provided context. Do not use outside knowledge.
+If the answer is not found in the context, say exactly this in the user's language: "This information is not available in the uploaded document."
+
+LANGUAGE RULE (strictly follow this):
+{lang_instruction}
+
+Keep your answer clear, accurate, and concise.
+"""
 
     user_prompt = f"Context:\n{context}\n\nQuestion:\n{query}"
 
